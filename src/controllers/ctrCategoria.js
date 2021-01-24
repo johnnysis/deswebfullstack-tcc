@@ -3,10 +3,10 @@ const Categoria = require('../models/categoria');
 
 class CtrCategoria {
     static async create(req, res) {
+        
         try
         {
             let categoria = await Categoria.getByCodigo(req.body.codigo);
-            
             if(!categoria) {
 
                 categoria = new Categoria(
@@ -17,20 +17,32 @@ class CtrCategoria {
                 var codigo = await categoria.save();
                 res.status(HttpStatus.OK).send({codigo});
             }
-            else
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Código já cadastrado."});
+            else {
+                
+                categoria.descricao = req.body.descricao;
+                await categoria.save()
+                res.status(HttpStatus.OK).send({codigo});
+            }
         }
         catch(err) {
+            console.log(err);
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
         }
     }
     static async index(req, res, next) {
-        res.status(HttpStatus.OK).send(await Categoria.getListaCategorias());
+        try {
+            res.status(HttpStatus.OK).send(await Categoria.getListaCategorias());
+        }
+        catch(err) {
+            console.log(err);
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
+        }
     }
     static async remove(req, res) {
         try {
             const codigo = req.params.codigo;
             var categoria = await Categoria.getByCodigo(codigo);
+            
             if(!categoria)
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Categoria não encontrada"});
             else
@@ -57,4 +69,4 @@ class CtrCategoria {
     }
 }
 
-module.exports = CtrCategoria;
+module.exports = CtrCategoria;  

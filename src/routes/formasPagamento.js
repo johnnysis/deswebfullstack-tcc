@@ -1,7 +1,7 @@
 const express = require('express');
 const formasPagamento = express.Router();
 
-const ctrFormasPagamento = require("../src/controllers/ctrFormaPagamento");
+const ctrFormasPagamento = require("../controllers/ctrFormaPagamento");
 
 formasPagamento.post('/create', ctrFormasPagamento.create);
 formasPagamento.get('/', ctrFormasPagamento.index);

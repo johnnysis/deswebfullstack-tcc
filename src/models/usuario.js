@@ -1,4 +1,4 @@
-const db = require('../database/db')
+const db = require('../database/db');
 const Pessoa = require('./pessoa');
 const Cidade = require('./cidade');
 
@@ -26,18 +26,19 @@ class Usuario extends Pessoa {
         super(codigo, nome, cidade, logradouro, bairro, numero, cep, email);
         
         this.login = login;
-        this.senha = senha;
+        this.senha = senha; //Adicionar nível de usuário.
     }
     async save() {
         
       	let params = [];
-      	let sql = ``;
+        let sql = ``;
       	if(this.codigo === 0) {
             let insertedCodigo = await super.save();
             this.codigo = insertedCodigo;
 			params = [insertedCodigo, this.login, this.senha];
 			sql = `insert into usuario(pes_codigo, usu_login, usu_senha)
-					values(?, ?, ?)`;
+                    values(?, ?, ?)`;
+            
 		}
       	else {
 			super.save();
@@ -71,6 +72,7 @@ class Usuario extends Pessoa {
         return new Promise((resolve, reject) => {
             db.select(sql, params)
             .then(async function(result) {
+                console.log(result.length);
                 if(result.length > 0)
                 {
                     let usu = await Conversao.converteUsuario(result[0]);
@@ -82,7 +84,23 @@ class Usuario extends Pessoa {
             .catch(err => reject(err));
         });
     }
-
+    static getByCodigo(codigo) {
+        const sql = 'select * from usuario u inner join pessoa p on u.pes_codigo = p.pes_codigo where u.pes_codigo = ?';
+        const params = [codigo];
+        return new Promise((resolve, reject) => {
+            db.select(sql, params)
+            .then(async function(result) {
+                if(result.length > 0)
+                {
+                    let usu = await Conversao.converteUsuario(result[0]);
+                    resolve(usu);
+                }   
+                else
+                    resolve(null);
+            })
+            .catch(err => reject(err));
+        });
+    }
     static getListaUsuarios() {
         const sql = 'select * from usuario u inner join pessoa p on u.pes_codigo = p.pes_codigo';
 

@@ -15,7 +15,8 @@ class CtrCompra {
                 compra = new Compra(
                     req.body.codigo,
                     fornecedor,
-                    req.body.valorTotal
+                    req.body.valorTotal,
+                    null
                 );
                 
                 var codigo = await compra.save();
@@ -63,19 +64,28 @@ class CtrCompra {
         }
     }
 
-    static async gravaItensDaCompra(req, res, next) {
+    static async relatorioComprasPorAno(req, res) {
+        try {
+            res.status(HttpStatus.OK).send(await Compra.relatorioComprasPorAno(req.query.ano));
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err });
+        }
+    }
+
+    static async gravaItensDaCompra(req, res) {
         var itensCompra = req.body.itensCompra;
         var codigoCompra = req.query.codigoCompra;
         var lItens = [];
         for(let el of itensCompra)
-            lItens.push(new ItemCompra(new Compra(codigoCompra), new Produto(el.produtoCodigo), el.quantidade));
+            lItens.push(new ItemCompra(new Compra(codigoCompra), new Produto(el.codigo), el.quantidade));
         
         await Compra.excluirItensDaCompra(codigoCompra);
         await Compra.gravarItensDaCompra(codigoCompra, lItens);
 
         res.status(HttpStatus.OK).send(await Compra.getItensDaCompra(codigoCompra));
     }
-    static async getItensDaCompra(req, res, next) {
+    static async getItensDaCompra(req, res) {
         var codigo = req.query.codigoCompra;
         res.status(HttpStatus.OK).send(await Compra.getItensDaCompra(codigo));
     }

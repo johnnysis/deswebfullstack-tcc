@@ -5,17 +5,20 @@ const Cliente = require('../models/cliente');
 const FormaPagamento = require('../models/formaPagamento');
 const Produto = require('../models/produto');
 
+
 class CtrVenda {
     static async create(req, res) {
         try
         {
             let venda = await Venda.getByCodigo(req.body.codigo);
             
-            if(!venda) {
-                let formaPagamento = await FormaPagamento.getByCodigo(req.body.formaPagamentoCodigo);
+            if (!venda) {
+                let formaPagamento = null;
+                if (req.body.formaPagamento)
+                    formaPagamento = await FormaPagamento.getByCodigo(req.body.formaPagamentoCodigo);
                 
                 let cliente = await Cliente.getByCodigo(req.body.clienteCodigo);
-                
+
                 venda = new Venda(
                     req.body.codigo,
                     cliente,
@@ -23,7 +26,8 @@ class CtrVenda {
                     req.body.valorTotal,
                     req.body.valorTotalComDesconto,
                     req.body.pago,
-                    req.body.entregue
+                    null,
+                    null
                 );
                 
                 var codigo = await venda.save();
@@ -32,7 +36,8 @@ class CtrVenda {
             else
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Código já cadastrado."});
         }
-        catch(err) {
+        catch (err) {
+            console.log(err);
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
         }
     }
@@ -70,21 +75,89 @@ class CtrVenda {
         }
     }
 
-    static async gravaItensDaVenda(req, res, next) {
-        var itensVenda = req.body.itensVenda;
-        var codigoVenda = req.query.codigoVenda;
-        var lItens = [];
-        for(let el of itensVenda)
-            lItens.push(new ItemVenda(new Venda(codigoVenda), new Produto(el.produtoCodigo), el.quantidade));
-        
-        await Venda.excluirItensDaVenda(codigoVenda);
-        await Venda.gravarItensDaVenda(codigoVenda, lItens);
+    static async gravaItensDaVenda(req, res) {
+        try {
+            var itensVenda = req.body.itensVenda;
+            var codigoVenda = req.query.codigoVenda;
+            var lItens = [];
+            for (let el of itensVenda)
+                lItens.push(new ItemVenda(new Venda(codigoVenda), new Produto(el.codigo), el.quantidade));
 
-        res.status(HttpStatus.OK).send(await Venda.getItensDaVenda(codigoVenda));
+            await Venda.excluirItensDaVenda(codigoVenda);
+            await Venda.gravarItensDaVenda(codigoVenda, lItens);
+
+            res.status(HttpStatus.OK).send(await Venda.getItensDaVenda(codigoVenda));
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err.message });
+        }
     }
-    static async getItensDaVenda(req, res, next) {
+
+    static async getVendasPorCliente(req, res) {
+        try {
+            let clienteCodigo = req.query.clienteCodigo;
+
+            res.status(HttpStatus.OK).send(await Venda.getVendasPorCliente(clienteCodigo));
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err.message });
+        }
+    }
+
+    static async getItensDaVenda(req, res) {
         var codigo = req.query.codigoVenda;
         res.status(HttpStatus.OK).send(await Venda.getItensDaVenda(codigo));
+    }
+
+    static async realizarPagamento(req, res) {
+        try {
+            let venda = await Venda.getByCodigo(req.body.codigoVenda);
+            let formaPagamento = await FormaPagamento.getByCodigo(req.body.codigoFormaPagamento);
+
+            if (formaPagamento === null)
+                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: "Forma de pagamento não localizada." });
+            else {
+                venda.formaPagamento = formaPagamento;
+                venda.save();
+                res.status(HttpStatus.OK).send({ codigo: venda.codigo });
+            }
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err.message });
+        }
+    }
+
+    static async relatorioVendasPorAno(req, res) {
+        try {
+            res.status(HttpStatus.OK).send(await Venda.relatorioVendasPorAno(req.query.ano));
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err });
+        }
+    }
+    static async relatorioVendasPorCategoria(req, res) {
+        try {
+            res.status(HttpStatus.OK).send(await Venda.relatorioVendasPorCategoria());
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err });
+        }
+    }
+    static async relatorioVendasPorFormaDePagamento(req, res) {
+        try {
+            res.status(HttpStatus.OK).send(await Venda.relatorioVendasPorFormaDePagamento());
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err });
+        }
+    }
+    static async relatorioPagosNaoPagosPorMesAno(req, res) {
+        try {
+            res.status(HttpStatus.OK).send(await Venda.relatorioPagosNaoPagosPorMesAno(req.query.ano));
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err });
+        }
     }
 }
 

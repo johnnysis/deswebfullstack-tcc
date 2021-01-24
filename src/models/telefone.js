@@ -30,6 +30,7 @@ class Telefone {
         });
     }
 
+    //trocar - de pessoa para cliente.
     static excluirTelefonesPorCliente(pessoaCodigo) {
         const sql = "delete from telefone where pes_codigo = ?";
         const params = [pessoaCodigo];
@@ -62,52 +63,52 @@ class Telefone {
         });
     }
     
-    static getByCodigo(codigo) {
-        const sql = 'select * from telefone where tel_codigo = ?';
-        const params = [codigo];
+    // static getByCodigo(codigo) {
+    //     const sql = 'select * from telefone where tel_codigo = ?';
+    //     const params = [codigo];
         
-        return new Promise((resolve, reject) => {
-            db.select(sql, params)
-            .then(async function(result) {
-                if(result && result.length > 0)
-                {
-                    let cliente = await Cliente.getByCodigo(result[0].pes_codigo);
-                    let telefone = new Telefone(
-                        result[0].tel_codigo,
-                        result[0].tel_numero,
-                        cliente);
+    //     return new Promise((resolve, reject) => {
+    //         db.select(sql, params)
+    //         .then(async function(result) {
+    //             if(result && result.length > 0)
+    //             {
+    //                 let cliente = await Cliente.getByCodigo(result[0].pes_codigo);
+    //                 let telefone = new Telefone(
+    //                     result[0].tel_codigo,
+    //                     result[0].tel_numero,
+    //                     cliente);
                     
-                    resolve(telefone);
-                }   
-                else
-                    resolve(null);
-            })
-            .catch(err => reject(err));
-        });
-    }
-    static getByCodigoSimplificado(codigo) {
-        const sql = 'select * from telefone where tel_codigo = ?';
-        const params = [codigo];
+    //                 resolve(telefone);
+    //             }   
+    //             else
+    //                 resolve(null);
+    //         })
+    //         .catch(err => reject(err));
+    //     });
+    // }
+    // static getByCodigoSimplificado(codigo) {
+    //     const sql = 'select * from telefone where tel_codigo = ?';
+    //     const params = [codigo];
         
-        return new Promise((resolve, reject) => {
-            db.select(sql, params)
-            .then(async function(result) {
-                if(result && result.length > 0)
-                {
-                    let cliente = new Cliente(result[0].pes_codigo);
-                    let telefone = new Telefone(
-                        result[0].tel_codigo,
-                        result[0].tel_numero,
-                        cliente);
+    //     return new Promise((resolve, reject) => {
+    //         db.select(sql, params)
+    //         .then(async function(result) {
+    //             if(result && result.length > 0)
+    //             {
+    //                 let cliente = new Cliente(result[0].pes_codigo);
+    //                 let telefone = new Telefone(
+    //                     result[0].tel_codigo,
+    //                     result[0].tel_numero,
+    //                     cliente);
                     
-                    resolve(telefone);
-                }   
-                else
-                    resolve(null);
-            })
-            .catch(err => reject(err));
-        });
-    }
+    //                 resolve(telefone);
+    //             }   
+    //             else
+    //                 resolve(null);
+    //         })
+    //         .catch(err => reject(err));
+    //     });
+    // }
 }
 
 module.exports = Telefone;

@@ -40,7 +40,7 @@ class FormaPagamento {
             .catch(err => reject(err));
         });
     }
-    static getListaFormaPagamentos() {
+    static getListaFormasPagamento() {
         return new Promise((resolve, reject) => {
             db.select('select * from forma_pagamento')
                 .then(async function(rLista) {

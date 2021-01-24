@@ -1,3 +1,4 @@
+const moment = require('moment');
 const db = require('../database/db')
 const Fornecedor = require('./fornecedor');
 const ItemCompra = require('./itemCompra');
@@ -10,24 +11,28 @@ class Conversao {
         let compra = new Compra(
             result.com_codigo,
             fornecedor,
-            result.com_valor_total);
+            result.com_valor_total,
+            result.com_datapagamento
+            );
         return compra;
     }
 }
 
 class Compra {
-    constructor(codigo, fornecedor, valorTotal) {
-        Object.assign(this, { codigo, fornecedor, valorTotal });
+    constructor(codigo, fornecedor, valorTotal, data) {
+        if(data === null)
+            data = moment().format("YYYY-MM-DD HH:mm:ss");
+        Object.assign(this, { codigo, fornecedor, valorTotal, data });
     }
     
     async save() {
         let sql = '';
-        let params = [this.fornecedor.codigo, this.valorTotal];
+        let params = [this.fornecedor.codigo, this.valorTotal, this.data];
         if(this.codigo === 0)
-            sql = `insert into compra(com_codigo, pes_codigo, com_valor_total)
-                    values(null, ?, ?)`;
+            sql = `insert into compra(com_codigo, pes_codigo, com_valor_total, com_data)
+                    values(null, ?, ?, ?)`;
         else {
-            sql = `update compra set pes_codigo, com_valor_total
+            sql = `update compra set pes_codigo = ?, com_valor_total = ?, com_data = ?
                         where com_codigo = ?`;
             params.push(this.codigo);
         }
@@ -62,9 +67,9 @@ class Compra {
         }
     }
 
-    static getItensDaCompra(compraCodigo) {
+    static getItensDaCompra(codigo) {
         var sql = 'select * from item_compra where com_codigo = ?';
-        var params = [compraCodigo];
+        var params = [codigo];
 
         return new Promise((resolve, reject) => {
             db.select(sql, params)
@@ -83,14 +88,30 @@ class Compra {
         });
     }
 
-    static async excluirItensDaCompra(compraCodigo) {
-        let lista = await Compra.getItensDaCompra(compraCodigo);
+    static async relatorioComprasPorAno(ano) {
+        const sql = `select count(com_codigo) as quantidade, month(com_data) as mes
+            from compra where year(com_data) = ?
+            group by month(com_data);`;
+        const params = [ano];
+        let result = await db.select(sql, params);
+        if (result.length > 0) {
+            let lista = [];
+            for (let el of result)
+                lista.push({ mes: el.mes, quantidade: el.quantidade });
+            console.log(lista);
+            return lista;
+        }
+        return null;
+    }
+
+    static async excluirItensDaCompra(codigo) {
+        let lista = await Compra.getItensDaCompra(codigo);
         for(let el of lista) {
             el.produto.atualizaEstoque(el.produto.quantidade - el.quantidade);
         }
 
         const sql = "delete from item_compra where com_codigo = ?";
-        const params = [compraCodigo];
+        const params = [codigo];
         return new Promise((resolve, reject) => {
             db.remove(sql, params)
             .then(numberRows => {

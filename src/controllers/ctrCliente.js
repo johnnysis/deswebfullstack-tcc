@@ -8,11 +8,8 @@ class CtrCliente {
         try
         {
             let cliente = await Cliente.getByCpf(req.body.cpf);
-            
+            const cidade = await Cidade.getByCodigo(req.body.codigoCidade);
             if(!cliente) {
-                
-                const cidade = await Cidade.getByCodigo(req.body.codigocidade);
-
                 cliente = new Cliente(
                     req.body.codigo,
                     req.body.nome,
@@ -28,25 +25,50 @@ class CtrCliente {
                 var codigo = await cliente.save();
                 res.status(HttpStatus.OK).send({codigo});
             }
-            else
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Cpf já cadastrado."});
+            else {
+                cliente.nome = req.body.nome;
+                cliente.cidade = cidade;
+                cliente.logradouro = req.body.logradouro;
+                cliente.bairro = req.body.bairro;
+                cliente.numero = req.body.numero;
+                cliente.cep = req.body.cep;
+                cliente.email = req.body.email;
+                cliente.cpf = req.body.cpf;
+                
+                await cliente.save();
+                res.status(HttpStatus.OK).send({codigo: cliente.codigo});
+            }
         }
         catch(err) {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
+            console.log(err.message);
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err.message});
         }
     }
     static async index(req, res, next) {
         res.status(HttpStatus.OK).send(await Cliente.getlistaClientes());
     }
+
+    static async recuperarPorNomeCpf(req, res, next) {
+        try {
+            let clisPorCpf = await Cliente.getListByCpf(req.query.nomeCpf);
+            let clisPorNome = await Cliente.getListByNome(req.query.nomeCpf);
+
+            let retorno = clisPorCpf && clisPorCpf.length > 0 ? clisPorCpf : clisPorNome;
+
+            res.status(HttpStatus.OK).send(retorno);
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err.message });
+        }
+    }
+
     static async gravaTelefones(req, res, next) {
         var listaTelefones = req.body.listaTelefones;
         var codigo = req.query.codigoCliente;
         var lTel = [];
-        console.log(req.query);
         for(let el of listaTelefones)
             lTel.push(new Telefone(0, el.numero, new Cliente(codigo)));
 
-        
         res.status(HttpStatus.OK).send(await Cliente.salvarTelefones(codigo, lTel));
     }
     static async getTelefones(req, res, next) {
@@ -56,8 +78,8 @@ class CtrCliente {
     }
     static async remove(req, res) {
         try {
-            const cpf = req.params.cpf;
-            var cliente = await Cliente.getByCpf(cpf);
+            const codigo = req.params.codigo;
+            var cliente = await Cliente.getByCodigo(codigo);
             if(!cliente)
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Cliente não encontrado"});
             else
@@ -72,7 +94,7 @@ class CtrCliente {
     }
     static async details(req, res) {
         try {
-            const cliente = await Cliente.getByCpf(req.params.cpf);
+            const cliente = await Cliente.getByCodigo(req.params.codigo);
             if(cliente)
                 res.status(HttpStatus.OK).send(cliente);
             else

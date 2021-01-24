@@ -7,11 +7,9 @@ class CtrProduto {
         try
         {
             let produto = await Produto.getByCodigo(req.body.codigo);
-            console.log(produto);
+            const categoria = await Categoria.getByCodigo(req.body.codigoCategoria);
             
             if(!produto) {
-                const categoria = await Categoria.getByCodigo(req.body.codigocategoria);
-                
                 produto = new Produto(
                     req.body.codigo,
                     req.body.descricao,
@@ -19,15 +17,22 @@ class CtrProduto {
                     req.body.quantidade,
                     req.body.preco
                 );
-
+                
                 var codigo = await produto.save();
                 res.status(HttpStatus.OK).send({codigo});
             }
-            else
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Código já cadastrado."});
+            else {
+                produto.descricao = req.body.descricao;
+                produto.categoria = categoria;
+                produto.quantidade = req.body.quantidade;
+                produto.preco = req.body.preco;
+                
+                await produto.save()
+                res.status(HttpStatus.OK).send({codigo});
+            }
         }
         catch(err) {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err.toString()});
         }
     }
     static async index(req, res, next) {
@@ -59,6 +64,15 @@ class CtrProduto {
         }
         catch(err) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
+        }
+    }
+    static async recuperarPorDescricao(req, res) {
+        try {
+            const produtos = await Produto.getListByDescricao(req.query.descricao);
+            res.status(HttpStatus.OK).send(produtos);
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err });
         }
     }
 }

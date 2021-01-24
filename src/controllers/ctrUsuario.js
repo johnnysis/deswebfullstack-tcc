@@ -1,20 +1,16 @@
 const HttpStatus = require('http-status-codes');
 const Usuario = require('../models/usuario');
 const Cidade = require('../models/cidade');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-
-const salt = 12;
 
 class CtrUsuario {
+    
     static async create(req, res) {
         try
         {
             let usuario = await Usuario.getByLogin(req.body.login);
-            
+            const cidade = await Cidade.getByCodigo(req.body.codigoCidade);
+            console.log(cidade);
             if(!usuario) {
-                const cidade = await Cidade.getByCodigo(req.body.codigocidade);
-
                 usuario = new Usuario(
                     req.body.codigo,
                     req.body.nome,
@@ -25,17 +21,31 @@ class CtrUsuario {
                     req.body.cep,
                     req.body.email,
                     req.body.login,
-                    bcrypt.hashSync(req.body.senha, salt) //compara hash na hora do login
+                    hash(req.body.senha) //compara hash na hora do login
                 );
 
                 var codigo = await usuario.save();
                 res.status(HttpStatus.OK).send({codigo});
             }
-            else
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "login encontra-se em uso."});
+            else {
+                usuario.nome = req.body.nome;
+                usuario.cidade = cidade;
+                usuario.logradouro = req.body.logradouro;
+                usuario.bairro = req.body.bairro;
+                usuario.numero = req.body.numero;
+                usuario.cep = req.body.cep;
+                usuario.email = req.body.email;
+                usuario.cpf = req.body.cpf;
+                if(req.body.senha)
+                    usuario.senha = hash(req.body.senha);
+                
+                await usuario.save();
+                res.status(HttpStatus.OK).send({codigo: usuario.codigo});
+            }
         }
         catch(err) {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
+            console.log(err)
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err.message});
         }
     }
     static async index(req, res, next) {
@@ -43,8 +53,8 @@ class CtrUsuario {
     }
     static async remove(req, res) {
         try {
-            const login = req.params.login;
-            var usuario = await Usuario.getByLogin(login);
+            const codigo = req.params.codigo;
+            var usuario = await Usuario.getByCodigo(codigo);
             if(!usuario)
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Usuário não encontrado"});
             else
@@ -54,22 +64,21 @@ class CtrUsuario {
             }
         }
         catch(err) {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err.message});
         }
     }
     static async details(req, res) {
         try {
-            const usuario = await Usuario.getByLogin(req.params.login);
+            const usuario = await Usuario.getByCodigo(req.params.codigo);
             if(usuario)
                 res.status(HttpStatus.OK).send(usuario);
             else
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Usuário não encontrado"});
         }
         catch(err) {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err.message});
         }
     }
-
 }
 
 module.exports = CtrUsuario;

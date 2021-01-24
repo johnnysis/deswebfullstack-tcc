@@ -6,12 +6,9 @@ class CtrFornecedor {
     static async create(req, res) {
         try
         {
-            let fornecedor = await Fornecedor.getByCnpj(req.body.cnpj);
-            
-            
+            let fornecedor = await Fornecedor.getByCodigo(req.body.codigo);
+            const cidade = await Cidade.getByCodigo(req.body.codigoCidade);
             if(!fornecedor) {
-                const cidade = await Cidade.getByCodigo(req.body.codigocidade);
-                
                 fornecedor = new Fornecedor(
                     req.body.codigo,
                     req.body.nome,
@@ -22,17 +19,29 @@ class CtrFornecedor {
                     req.body.cep,
                     req.body.email,
                     req.body.cnpj,
-                    req.body.razaosocial,
-                    req.body.nomefantasia
+                    req.body.razaoSocial
                 );
 
                 var codigo = await fornecedor.save();
                 res.status(HttpStatus.OK).send({codigo});
             }
-            else
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Cnpj já cadastrado."});
+            else {
+                
+                fornecedor.nome = req.body.nome,
+                fornecedor.cidade = cidade,
+                fornecedor.logradouro = req.body.logradouro,
+                fornecedor.bairro = req.body.bairro,
+                fornecedor.numero = req.body.numero,
+                fornecedor.cep = req.body.cep,
+                fornecedor.email = req.body.email,
+                fornecedor.cnpj = req.body.cnpj,
+                fornecedor.razaoSocial = req.body.razaoSocial
+                await fornecedor.save();
+                res.status(HttpStatus.OK).send({codigo: fornecedor.codigo});
+            }
         }
         catch(err) {
+            console.log(err);
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
         }
     }
@@ -41,8 +50,8 @@ class CtrFornecedor {
     }
     static async remove(req, res) {
         try {
-            const cnpj = req.params.cnpj;
-            var fornecedor = await Fornecedor.getByCnpj(cnpj);
+            const codigo = req.params.codigo;
+            var fornecedor = await Fornecedor.getByCodigo(codigo);
             if(!fornecedor)
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Fornecedor não encontrado"});
             else
@@ -52,12 +61,13 @@ class CtrFornecedor {
             }
         }
         catch(err) {
+            console.log(err);
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
         }
     }
     static async details(req, res) {
         try {
-            const fornecedor = await Fornecedor.getByCnpj(req.params.cnpj);
+            const fornecedor = await Fornecedor.getByCodigo(req.params.codigo);
             if(fornecedor)
                 res.status(HttpStatus.OK).send(fornecedor);
             else
@@ -65,6 +75,20 @@ class CtrFornecedor {
         }
         catch(err) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
+        }
+    }
+    static async recuperarPorNomeFantasiaCnpj(req, res) {
+        try {
+            let forsPorCnpj = await Fornecedor.getListByCnpj(req.query.nomeFantasiaCnpj);
+            let forsPorNomeFantasia = await Fornecedor.getListByNomeFantasia(req.query.nomeFantasiaCnpj);
+
+            let retorno = forsPorCnpj && forsPorCnpj.length > 0 ? forsPorCnpj : forsPorNomeFantasia;
+
+            res.status(HttpStatus.OK).send(retorno);
+        }
+        catch (err) {
+            console.log(err);
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err.message });
         }
     }
 }

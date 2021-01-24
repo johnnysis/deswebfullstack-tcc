@@ -1,7 +1,7 @@
 const express = require('express');
 const categorias = express.Router();
 
-const ctrCategoria = require("../src/controllers/ctrCategoria");
+const ctrCategoria = require("../controllers/ctrCategoria");
 
 categorias.post('/create', ctrCategoria.create);
 categorias.get('/', ctrCategoria.index);

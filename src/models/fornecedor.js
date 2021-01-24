@@ -39,10 +39,10 @@ class Fornecedor extends Pessoa {
                     values(?, ?, ?, ?)`;
         }
         else {
-            this.codigo = super.save();
-            sql = `update fornecedor set for_cnpj = ?, for_razaosocial = ?, for_nomefantasia = ?
+            super.save();
+            sql = `update fornecedor set for_cnpj = ?, for_razaosocial = ?
                         where pes_codigo = ?`;
-            params = [this.cnpj, this.razaoSocial, this.nomeFantasia, this.codigo];
+            params = [this.cnpj, this.razaoSocial, this.codigo];
         }
         
         return new Promise((resolve, reject) => {
@@ -112,6 +112,52 @@ class Fornecedor extends Pessoa {
         });
     }
 
+    static getListByCnpj(cnpj) {
+        const sql = "select * from fornecedor f inner join pessoa p on f.pes_codigo = p.pes_codigo where f.for_cnpj like ?";
+        const params = [`%${cnpj}%`];
+
+        return new Promise((resolve, reject) => {
+            db.select(sql, params)
+                .then(async function (result) {
+                    var fornecedores = [];
+                    if (result && result.length > 0) {
+                        for (let el of result) {
+                            let fornecedor = await Conversao.converteFornecedor(el);
+                            fornecedores.push(fornecedor);
+                        }
+
+                        resolve(fornecedores);
+                    }
+                    else
+                        resolve(null);
+                })
+                .catch(err => reject(err));
+        });
+    }
+
+    static getListByNomeFantasia(nomeFantasia) {
+        const sql = "select * from fornecedor f inner join pessoa p on f.pes_codigo = p.pes_codigo where f.for_nomefantasia like ?";
+        const params = [`%${nomeFantasia}%`];
+
+        return new Promise((resolve, reject) => {
+            db.select(sql, params)
+                .then(async function (result) {
+                    var fornecedores = [];
+                    if (result && result.length > 0) {
+                        for (let el of result) {
+                            let fornecedor = await Conversao.converteFornecedor(el);
+                            fornecedores.push(fornecedor);
+                        }
+
+                        resolve(fornecedores);
+                    }
+                    else
+                        resolve(null);
+                })
+                .catch(err => reject(err));
+        });
+    }
+
     static getByCodigo(codigo) {
         const sql = 'select * from fornecedor f inner join pessoa p on f.pes_codigo = p.pes_codigo where f.pes_codigo = ?';
         const params = [codigo];
@@ -132,10 +178,5 @@ class Fornecedor extends Pessoa {
         });
     }
 }
-
-// let forn = new Fornecedor(0, 'teste 1', { codigo: 2}, 'teste', 'teste', 'teste', 'teste', 'teste', 'teste', 'teste', 'teste', 'tteste');
-// forn.save();
-
-// Fornecedor.getListaFornecedores().then(result => console.log(result));
 
 module.exports = Fornecedor;

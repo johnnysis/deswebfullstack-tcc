@@ -61,6 +61,38 @@ class Produto {
                 .catch(reason => reject(reason));
         });
     }
+
+    static getListByDescricao(descricao) {
+        const sql = 'select * from produto where pro_descricao like ?';
+        const params = [`%${descricao}%`];
+
+        return new Promise((resolve, reject) => {
+            db.select(sql, params)
+                .then(async function (result) {
+
+                    if (result && result.length > 0) {
+                        let produtos = [];
+                        for (let el of result) {
+                            let categoria = await Categoria.getByCodigo(el.cat_codigo);
+                            let produto = new Produto(
+                                el.pro_codigo,
+                                el.pro_descricao,
+                                categoria,
+                                el.pro_quantidade,
+                                el.pro_preco);
+
+                            produtos.push(produto);
+                        }
+
+                        resolve(produtos);
+                    }
+                    else
+                        resolve(null);
+                })
+                .catch(err => reject(err));
+        });
+    }
+
     static getByCodigo(codigo) {
         const sql = 'select * from produto where pro_codigo = ?';
         const params = [codigo];
@@ -77,8 +109,7 @@ class Produto {
                         result[0].pro_descricao,
                         categoria,
                         result[0].pro_quantidade,
-                        result[0].preco);
-                    
+                        result[0].pro_preco);
                     resolve(produto);
                 }   
                 else

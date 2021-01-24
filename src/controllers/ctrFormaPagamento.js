@@ -17,15 +17,19 @@ class CtrFormaPagamento {
                 var codigo = await formaPagamento.save();
                 res.status(HttpStatus.OK).send({codigo});
             }
-            else
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Código já cadastrado."});
+            else {
+                
+                formaPagamento.descricao = req.body.descricao;
+                await formaPagamento.save()
+                res.status(HttpStatus.OK).send({codigo});
+            }
         }
         catch(err) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
         }
     }
     static async index(req, res, next) {
-        res.status(HttpStatus.OK).send(await FormaPagamento.getListaFormaPagamentos());
+        res.status(HttpStatus.OK).send(await FormaPagamento.getListaFormasPagamento());
     }
     static async remove(req, res) {
         try {

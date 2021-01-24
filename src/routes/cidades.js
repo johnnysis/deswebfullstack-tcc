@@ -1,7 +1,7 @@
 const express = require('express');
 const cidades = express.Router();
-const ctrCidades = require('../src/controllers/ctrCidade');
+const ctrCidade = require('../controllers/ctrCidade');
 
-cidades.get('/', ctrCidades.get);
+cidades.get('/', ctrCidade.get);
 
 module.exports = cidades;

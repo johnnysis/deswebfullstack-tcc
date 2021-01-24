@@ -45,16 +45,22 @@ class Cliente extends Pessoa {
         return new Promise((resolve, reject) => {
             db.save(sql, params)
                 .then(() => {
-                    this.salvarTelefones();
+                    // this.salvarTelefones();
                     resolve(this.codigo)
                 })
                 .catch(err => reject(err));
         });
     }
     static async salvarTelefones(codigo, telefones) {
-        await Telefone.excluirTelefonesPorCliente(codigo);
-        for(let tel of telefones) {
-            tel.save();
+        try {
+            
+            await Telefone.excluirTelefonesPorCliente(codigo);
+            for(let tel of telefones) {
+                tel.save();
+            }
+        }
+        catch(err) {
+            console.log(err);
         }
     }
 
@@ -103,8 +109,8 @@ class Cliente extends Pessoa {
     }
     
     static getByCpf(cpf) {
-        const sql = 'select * from cliente c inner join pessoa p on c.pes_codigo = p.pes_codigo where c.cli_cpf = ?';
-        const params = [cpf];
+        const sql = "select * from cliente c inner join pessoa p on c.pes_codigo = p.pes_codigo where c.cli_cpf like ?";
+        const params = [`%${cpf}%`];
         
         return new Promise((resolve, reject) => {
             db.select(sql, params)
@@ -119,6 +125,52 @@ class Cliente extends Pessoa {
                     resolve(null);
             })
             .catch(err => reject(err));
+        });
+    }
+
+    static getListByCpf(cpf) {
+        const sql = "select * from cliente c inner join pessoa p on c.pes_codigo = p.pes_codigo where c.cli_cpf like ?";
+        const params = [`%${cpf}%`];
+
+        return new Promise((resolve, reject) => {
+            db.select(sql, params)
+                .then(async function (result) {
+                    var clientes = [];
+                    if (result && result.length > 0) {
+                        for (let el of result) {
+                            let cliente = await Conversao.converteCliente(el);
+                            clientes.push(cliente);
+                        }
+
+                        resolve(clientes);
+                    }
+                    else
+                        resolve(null);
+                })
+                .catch(err => reject(err));
+        });
+    }
+
+    static getListByNome(nome) {
+        const sql = "select * from cliente c inner join pessoa p on c.pes_codigo = p.pes_codigo where p.pes_nome like ?";
+        const params = [`%${nome}%`];
+
+        return new Promise((resolve, reject) => {
+            db.select(sql, params)
+                .then(async function (result) {
+                    var clientes = [];
+                    if (result && result.length > 0) {
+                        for (let el of result) {
+                            let cliente = await Conversao.converteCliente(el);
+                            clientes.push(cliente);
+                        }
+
+                        resolve(clientes);
+                    }
+                    else
+                        resolve(null);
+                })
+                .catch(err => reject(err));
         });
     }
 
@@ -142,10 +194,5 @@ class Cliente extends Pessoa {
         });
     }
 }
-
-// let cli = new Cliente(0, 'teste 1', { codigo: 2 }, 'teste', 'teste', 'teste', 'teste', 'teste', 'teste', 'cpf Teste');
-// cli.save();
-
-// Cliente.getlistaClientes().then(result => console.log(result));
 
 module.exports = Cliente;
