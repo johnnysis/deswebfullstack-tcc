@@ -73,12 +73,37 @@ class CtrCompra {
         }
     }
 
+    static async recuperarComprasPorFornecedor(req, res) {
+        try {
+            const compra = await Compra.getByFornecedorCodigo(req.params.fornecedorCodigo);
+            
+            if(compra)
+                res.status(HttpStatus.OK).send(compra);
+            else
+                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Compra não encontrada"})
+        }
+        catch(err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
+        }
+    }
+
+    static async getComprasPorFornecedor(req, res) {
+        try {
+            let fornecedorCodigo = req.query.fornecedorCodigo;
+
+            res.status(HttpStatus.OK).send(await Compra.getComprasPorFornecedor(fornecedorCodigo));
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err.message });
+        }
+    }
+
     static async gravaItensDaCompra(req, res) {
         var itensCompra = req.body.itensCompra;
         var codigoCompra = req.query.codigoCompra;
         var lItens = [];
         for(let el of itensCompra)
-            lItens.push(new ItemCompra(new Compra(codigoCompra), new Produto(el.codigo), el.quantidade));
+            lItens.push(new ItemCompra(new Compra(codigoCompra), new Produto(el.codigo), el.quantidade, el.valorUnitario));
         
         await Compra.excluirItensDaCompra(codigoCompra);
         await Compra.gravarItensDaCompra(codigoCompra, lItens);

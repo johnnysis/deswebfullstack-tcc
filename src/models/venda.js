@@ -57,7 +57,9 @@ class Venda {
             db.save(sql, params)
                 .then(insertedCodigo => {
                     insertedCodigo !== 0 ? this.codigo = insertedCodigo : this.codigo = 0;
+                    console.log(this.codigo);
                     resolve(this.codigo);
+                    
                 })
                 .catch(err => reject(err));
         });

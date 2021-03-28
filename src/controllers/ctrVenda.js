@@ -1,4 +1,5 @@
 const HttpStatus = require('http-status-codes');
+const moment = require('moment');
 const Venda = require('../models/venda');
 const ItemVenda = require('../models/itemVenda');
 const Cliente = require('../models/cliente');
@@ -37,7 +38,6 @@ class CtrVenda {
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Código já cadastrado."});
         }
         catch (err) {
-            console.log(err);
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: err});
         }
     }
@@ -113,12 +113,31 @@ class CtrVenda {
         try {
             let venda = await Venda.getByCodigo(req.body.codigoVenda);
             let formaPagamento = await FormaPagamento.getByCodigo(req.body.codigoFormaPagamento);
-
             if (formaPagamento === null)
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: "Forma de pagamento não localizada." });
             else {
                 venda.formaPagamento = formaPagamento;
-                venda.save();
+                venda.pago = true;
+                venda.dataPagamento = moment().format("YYYY-MM-DD HH:mm:ss");
+                await venda.save();
+                res.status(HttpStatus.OK).send({ codigo: venda.codigo });
+            }
+        }
+        catch (err) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: err.message });
+        }
+    }
+
+    static async estornarPagamento(req, res) {
+        try {
+            let venda = await Venda.getByCodigo(req.body.codigoVenda);
+            if (venda === null)
+                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ erro: "Venda não encontrada." });
+            else {
+                venda.formaPagamento = null;
+                venda.pago = false;
+                venda.dataPagamento = null;
+                await venda.save();
                 res.status(HttpStatus.OK).send({ codigo: venda.codigo });
             }
         }

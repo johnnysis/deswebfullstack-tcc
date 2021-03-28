@@ -2,6 +2,7 @@ const HttpStatus = require('http-status-codes');
 const Cliente = require('../models/cliente');
 const Cidade = require('../models/cidade');
 const Telefone = require('../models/telefone');
+const Venda = require('../models/venda');
 
 class CtrCliente {
     static async create(req, res) {
@@ -84,8 +85,14 @@ class CtrCliente {
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({erro: "Cliente não encontrado"});
             else
             {
-                await cliente.remove();
-                res.status(HttpStatus.OK).send({mensagem: "Cliente excluído"});
+                let vendas = await Venda.getVendasPorCliente(codigo);
+                console.log(vendas);
+                if(vendas === null || vendas.length === 0)
+                    res.status(HttpStatus.OK).send("Erro ao excluir cliente, pois o sistema possui uma venda associada a ele");
+                else {
+                    await cliente.remove();
+                    res.status(HttpStatus.OK).send({mensagem: "Cliente excluído"});
+                }
             }
         }
         catch(err) {

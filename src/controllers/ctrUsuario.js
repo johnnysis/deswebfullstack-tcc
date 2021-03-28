@@ -1,6 +1,7 @@
 const HttpStatus = require('http-status-codes');
 const Usuario = require('../models/usuario');
 const Cidade = require('../models/cidade');
+const hash = require('object-hash');
 
 class CtrUsuario {
     

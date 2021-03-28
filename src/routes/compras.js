@@ -8,6 +8,7 @@ compras.post('/itens', ctrCompra.gravaItensDaCompra);
 compras.get('/', ctrCompra.index);
 compras.get('/itens', ctrCompra.getItensDaCompra);
 compras.get('/relatorioComprasPorAno', ctrCompra.relatorioComprasPorAno);
+compras.get('/comprasPorFornecedor', ctrCompra.getComprasPorFornecedor);
 compras.delete('/:codigo', ctrCompra.remove);
 compras.get('/:codigo', ctrCompra.details);
 

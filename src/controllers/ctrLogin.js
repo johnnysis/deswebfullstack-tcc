@@ -11,7 +11,7 @@ class CtrLogin {
             let usuario = await Usuario.getByLogin(req.body.login);
             
             if(!usuario) {
-                res.status(HttpStatus.BAD_REQUEST).send({erro: "Usuário não encontrado."});
+                res.status(HttpStatus.BAD_REQUEST).send({erro: "Login inválido."});
             }
             else {                
                 if(hash(req.body.senha) !== usuario.senha)
@@ -28,7 +28,7 @@ class CtrLogin {
             }
         }
         catch(err) {
-            console.log(err);
+            console.log(err.message);
             res.status(HttpStatus.BAD_REQUEST).send({erro: err.message});
         }
     }

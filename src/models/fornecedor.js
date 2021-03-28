@@ -24,7 +24,7 @@ class Conversao {
 
 class Fornecedor extends Pessoa {
     constructor(codigo, nome, cidade, logradouro, bairro, numero, cep, email, cnpj, razaoSocial, nomeFantasia) {
-        super(codigo, nome, cidade, logradouro, bairro, numero, cep, email);
+        super(codigo, nomeFantasia, cidade, logradouro, bairro, numero, cep, email);
         this.cnpj = cnpj;
         this.razaoSocial = razaoSocial;
         this.nomeFantasia = nomeFantasia;
@@ -40,14 +40,16 @@ class Fornecedor extends Pessoa {
         }
         else {
             super.save();
-            sql = `update fornecedor set for_cnpj = ?, for_razaosocial = ?
+            sql = `update fornecedor set for_cnpj = ?, for_razaosocial = ?, for_nomefantasia = ?
                         where pes_codigo = ?`;
-            params = [this.cnpj, this.razaoSocial, this.codigo];
+            params = [this.cnpj, this.razaoSocial, this.nomeFantasia, this.codigo];
         }
         
         return new Promise((resolve, reject) => {
+            console.log(sql);
+            console.log(params);
             db.save(sql, params)
-                .then(() => resolve(this.codigo))
+                .then((result) => { console.log(result); resolve(this.codigo); this.codigo })
                 .catch(err => reject(err));
         });
     }
@@ -74,6 +76,7 @@ class Fornecedor extends Pessoa {
                         el.for_razaosocial,
                         el.for_nomefantasia));
                 }
+                
                 resolve(listaFornecedores);
             })
             .catch(reason => reject(reason));

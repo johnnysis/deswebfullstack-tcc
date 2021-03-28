@@ -61,10 +61,32 @@ class Compra {
         await Compra.excluirItensDaCompra(codigo);
         for(let item of itensDaCompra) {
             let produto = await Produto.getByCodigo(item.produto.codigo);
-            produto.atualizaEstoque(produto.quantidade + item.quantidade);
+            produto.atualizaEstoque(parseInt(produto.quantidade) + parseInt(item.quantidade));
             
             item.save();
         }
+    }
+
+    static getComprasPorFornecedor(fornecedorCodigo) {
+        const sql = 'select * from compra where pes_codigo = ? order by com_codigo';
+        const params = [fornecedorCodigo];
+
+        return new Promise((resolve, reject) => {
+            db.select(sql, params)
+                .then(async function (result) {
+                    if (result && result.length > 0) {
+                        let compras = [];
+                        for (let r of result) {
+                            let v = await Conversao.converteCompra(r);
+                            compras.push(v);
+                        }
+                        resolve(compras);
+                    }
+                    else
+                        resolve(null)
+                })
+                .catch(err => resolve(err));
+        });
     }
 
     static getItensDaCompra(codigo) {
@@ -85,6 +107,25 @@ class Compra {
                 resolve(listaItensDaCompra);
             })
             .catch(reason => reject(reason));
+        });
+    }
+
+    static async getByFornecedorCodigo(fornecedorCodigo) {
+        const sql = 'select * from compra where pes_codigo = ?';
+        const params = [fornecedorCodigo];
+        
+        return new Promise((resolve, reject) => {
+            db.select(sql, params)
+            .then(async function(result) {
+                if(result && result.length > 0)
+                {
+                    let com = await Conversao.converteCompra(result[0]);
+                    resolve(com);
+                }   
+                else
+                    resolve(null)
+            })
+            .catch(err => resolve(err));
         });
     }
 

@@ -2,10 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\src",
-    "\\src\\controllers",
-    "\\src\\models",
-    "\\src\\routes"
+    "\\src\\configs",
+    "\\src\\database"
   ],
-  "SelectedNode": "\\src\\routes\\vendas.js",
+  "SelectedNode": "\\src\\configs\\settingsDb.js",
   "PreviewInSolutionExplorer": false
 }

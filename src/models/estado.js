@@ -27,7 +27,6 @@ class Estado {
     }
 
     static getListaEstados() {
-      //converter para os respectivos tipos?
         return new Promise((resolve, reject) => {
             db.select('select * from estado')
                 .then(rLista => {
